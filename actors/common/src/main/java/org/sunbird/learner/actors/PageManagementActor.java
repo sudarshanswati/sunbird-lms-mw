@@ -246,20 +246,9 @@ public class PageManagementActor extends BaseActor {
     filterMap.remove(JsonKey.FILTERS);
     filterMap.remove(JsonKey.CREATED_BY);
     Map<String, Object> reqFilters = (Map<String, Object>) req.get(JsonKey.FILTERS);
-    List<Map<String, Object>> result = null;
-    try {
-      if (!StringUtils.isBlank(orgId)) {
-        response =
-            cassandraOperation.getRecordById(
-                orgDbInfo.getKeySpace(), orgDbInfo.getTableName(), orgId);
-        result = (List<Map<String, Object>>) response.getResult().get(JsonKey.RESPONSE);
-      }
-    } catch (Exception e) {
-      ProjectLogger.log("Exception occurred while validating org id " + e.getMessage(), e);
-    }
 
     /** if orgId is not then consider default page */
-    if (CollectionUtils.isEmpty(result)) {
+    if (StringUtils.isBlank(orgId)) {
       orgId = "NA";
     }
     ProjectLogger.log("Fetching data from Cache for " + orgId + ":" + pageName, LoggerEnum.INFO);

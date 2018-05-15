@@ -55,7 +55,6 @@ public final class EkStepRequestUtil {
                   + PropertiesCache.getInstance().getProperty(JsonKey.EKSTEP_CONTENT_SEARCH_URL),
               params,
               headers);
-      ProjectLogger.log("Content serach response is ==" + response, LoggerEnum.INFO.name());
       jObject = new JSONObject(response);
       String resmsgId = (String) jObject.getJSONObject("params").get("resmsgid");
       String apiId = jObject.getString("id");
