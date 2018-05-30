@@ -227,12 +227,11 @@ public class PageManagementActor extends BaseActor {
   }
 
   @SuppressWarnings("unchecked")
-  private void getPageData(Request actorMessage) {
+  private void getPageData(Request actorMessage) throws Exception {
     ProjectLogger.log("Inside getPageData method", LoggerEnum.INFO);
     String sectionQuery = null;
     List<Map<String, Object>> sectionList = new ArrayList<>();
     Map<String, Object> filterMap = new HashMap<>();
-    Response response = null;
     Map<String, Object> req = (Map<String, Object>) actorMessage.getRequest().get(JsonKey.PAGE);
     String pageName = (String) req.get(JsonKey.PAGE_NAME);
     String source = (String) req.get(JsonKey.SOURCE);
@@ -480,7 +479,7 @@ public class PageManagementActor extends BaseActor {
       Map<String, Object> section,
       Map<String, Object> reqFilters,
       Map<String, String> headers,
-      Map<String, Object> filterMap) {
+      Map<String, Object> filterMap) throws Exception {
     ObjectMapper mapper = new ObjectMapper();
     Map<String, Object> map = new HashMap<>();
     try {
@@ -514,7 +513,7 @@ public class PageManagementActor extends BaseActor {
     ProjectLogger.log(
         "search query after applying filter for ekstep for page data assemble api : " + query,
         LoggerEnum.INFO);
-    Map<String, Object> result = EkStepRequestUtil.searchContent(query, headers);
+    Map<String, Object> result = EkStepRequestUtil.searchContent(query);
     if (null != result && !result.isEmpty()) {
       section.putAll(result);
       section.remove(JsonKey.PARAMS);

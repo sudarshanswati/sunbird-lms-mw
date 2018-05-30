@@ -1,19 +1,31 @@
 /** */
 package org.sunbird.learner.util;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.sunbird.common.exception.ProjectCommonException;
 import org.sunbird.common.models.util.HttpUtil;
 import org.sunbird.common.models.util.JsonKey;
 import org.sunbird.common.models.util.LoggerEnum;
 import org.sunbird.common.models.util.ProjectLogger;
 import org.sunbird.common.models.util.PropertiesCache;
+import org.sunbird.common.models.util.RestUtil;
+import org.sunbird.common.responsecode.ResponseCode;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.JsonNode;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.request.BaseRequest;
 
 /**
  * This class will make the call to EkStep content search
@@ -25,6 +37,68 @@ public final class EkStepRequestUtil {
   private static ObjectMapper mapper = new ObjectMapper();
 
   private EkStepRequestUtil() {}
+  
+  private static String contentSearchURL = RestUtil.getBasePath() + PropertiesCache.getInstance().getProperty(JsonKey.EKSTEP_CONTENT_SEARCH_URL); 
+  
+  
+  public static Map<String, Object> searchContent(String body) throws Exception {
+	  BaseRequest request = Unirest.post(contentSearchURL).body(body);
+	  HttpResponse<JsonNode> response = RestUtil.execute(request);
+	  if (RestUtil.isSuccessful(response)) {
+		  JSONObject result = response.getBody().getObject().getJSONObject("result");
+		  Map<String, Object> resultMap = jsonToMap(result);
+		  Object contents = resultMap.get(JsonKey.CONTENT);
+		  resultMap.remove(JsonKey.CONTENT);
+		  resultMap.put(JsonKey.CONTENTS, contents);
+		  String resmsgId = RestUtil.getFromResponse(response, "params.resmsgid");
+	      String apiId = RestUtil.getFromResponse(response, "id");
+	      Map<String, Object> param = new HashMap<>();
+	      param.put(JsonKey.RES_MSG_ID, resmsgId);
+	      param.put(JsonKey.API_ID, apiId);
+	      resultMap.put(JsonKey.PARAMS, param);
+		  return resultMap;
+	  } else {
+		  String err = RestUtil.getFromResponse(response, "params.err");
+          String message = RestUtil.getFromResponse(response, "params.errmsg");
+          throw new ProjectCommonException(err, message, ResponseCode.SERVER_ERROR.getResponseCode());
+	  }
+  }
+  
+  public static Map<String, Object> jsonToMap(JSONObject object) throws JSONException {
+	    Map<String, Object> map = new HashMap<String, Object>();
+	 
+	    Iterator<String> keysItr = object.keys();
+	    while(keysItr.hasNext()) {
+	        String key = keysItr.next();
+	        Object value = object.get(key);
+	 
+	        if(value instanceof JSONArray) {
+	            value = toList((JSONArray) value);
+	        }
+	 
+	        else if(value instanceof JSONObject) {
+	            value = jsonToMap((JSONObject) value);
+	        }
+	        map.put(key, value);
+	    }
+	    return map;
+	}
+  
+  public static List<Object> toList(JSONArray array) throws JSONException {
+	    List<Object> list = new ArrayList<Object>();
+	    for(int i = 0; i < array.length(); i++) {
+	        Object value = array.get(i);
+	        if(value instanceof JSONArray) {
+	            value = toList((JSONArray) value);
+	        }
+	 
+	        else if(value instanceof JSONObject) {
+	            value = jsonToMap((JSONObject) value);
+	        }
+	        list.add(value);
+	    }
+	    return list;
+	}
 
   /**
    * @param params String
