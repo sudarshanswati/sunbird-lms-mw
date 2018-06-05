@@ -44,7 +44,7 @@ public class EmailServiceActor extends BaseActor {
   @Override
   public void onReceive(Request request) throws Throwable {
     if (request.getOperation().equalsIgnoreCase(BackgroundOperations.emailService.name())) {
-      sendMail(request);
+//      sendMail(request);
     } else {
       onReceiveUnsupportedOperation(request.getOperation());
     }
