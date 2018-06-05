@@ -5,6 +5,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.sunbird.common.models.util.LoggerEnum;
 import org.sunbird.common.models.util.ProjectLogger;
+import org.sunbird.learner.util.DataCacheHandler;
+import org.sunbird.learner.util.ExecutorManager;
 
 /** @author Manzarul All the scheduler job will be handle by this class. */
 public class SchedulerManager {
@@ -14,11 +16,11 @@ public class SchedulerManager {
   /*
    * service ScheduledExecutorService object
    */
-  //public static ScheduledExecutorService service = ExecutorManager.getExecutorService();
+  public static ScheduledExecutorService service = ExecutorManager.getExecutorService();
 
   /** all scheduler job will be configure here. */
   public static void schedule() {
-    //service.scheduleWithFixedDelay(new DataCacheHandler(), 0, PAGE_DATA_TTL, TimeUnit.HOURS);
+    service.scheduleWithFixedDelay(new DataCacheHandler(), 0, PAGE_DATA_TTL, TimeUnit.HOURS);
     ProjectLogger.log(
         "SchedulerManager:schedule: Started scheduler job for cache refresh.",
         LoggerEnum.INFO.name());
