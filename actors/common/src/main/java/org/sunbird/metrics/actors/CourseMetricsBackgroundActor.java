@@ -21,6 +21,7 @@ import org.sunbird.common.exception.ProjectCommonException;
 import org.sunbird.common.models.response.Response;
 import org.sunbird.common.models.util.ActorOperations;
 import org.sunbird.common.models.util.JsonKey;
+import org.sunbird.common.models.util.LoggerEnum;
 import org.sunbird.common.models.util.ProjectLogger;
 import org.sunbird.common.models.util.ProjectUtil;
 import org.sunbird.common.models.util.ProjectUtil.EsType;
@@ -57,7 +58,8 @@ public class CourseMetricsBackgroundActor extends BaseMetricsActor {
   @SuppressWarnings("unchecked")
   public void courseProgressMetricsData(Request actorMessage) {
 
-    ProjectLogger.log("CourseMetricsActor-courseProgressMetrics called");
+    ProjectLogger.log(
+        "CourseMetricsBackgroundActor: courseProgressMetricsData called.", LoggerEnum.INFO.name());
     SimpleDateFormat format = ProjectUtil.getDateFormatter();
     format.setLenient(false);
 
@@ -71,7 +73,9 @@ public class CourseMetricsBackgroundActor extends BaseMetricsActor {
     List<Map<String, Object>> responseList =
         (List<Map<String, Object>>) response.get(JsonKey.RESPONSE);
     if (responseList.isEmpty()) {
-      ProjectLogger.log("Invalid data");
+      ProjectLogger.log(
+          "CourseMetricsBackgroundActor:courseProgressMetricsData: requestId not found.",
+          LoggerEnum.INFO.name());
       throw new ProjectCommonException(
           ResponseCode.invalidRequestData.getErrorCode(),
           ResponseCode.invalidRequestData.getErrorMessage(),
@@ -152,9 +156,6 @@ public class CourseMetricsBackgroundActor extends BaseMetricsActor {
         String userId = (String) map.get(JsonKey.USER_ID);
         map.put("user", userId);
         userInfoCache.put(userId, new HashMap<String, Object>(map));
-        // remove the org info from user content bcoz it is not desired in the user info
-        // result
-        map.remove(JsonKey.REGISTERED_ORG_ID);
         map.remove(JsonKey.USER_ID);
       }
 

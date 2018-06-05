@@ -3,6 +3,7 @@ package org.sunbird.util.lmaxdisruptor;
 import com.lmax.disruptor.dsl.Disruptor;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import org.sunbird.common.models.util.LoggerEnum;
 import org.sunbird.common.models.util.ProjectLogger;
 import org.sunbird.common.request.Request;
 
@@ -54,17 +55,15 @@ public class LMAXWriter {
     if (power % 1 != 0) {
       power = Math.ceil(power);
       ringBufferSize = (int) Math.pow(2, power);
-      ProjectLogger.log("New ring buffer size = " + ringBufferSize);
+      ProjectLogger.log(
+          "LMAXWriter:init: New ring buffer size = " + ringBufferSize, LoggerEnum.INFO.name());
     }
 
     // initialize our event handler.
-    // ESEventConsumer handler = new ESEventConsumer();
-    // TODO: need to add cassandra consumer in next release (1.6).
-    //        CassandraEventConsumer cassandraConsumer = new CassandraEventConsumer();
-    EkstepEventConsumer ekstepHandler = new EkstepEventConsumer();
+    SunbirdTelemetryEventConsumer sunbirdTelemetryHandler = new SunbirdTelemetryEventConsumer();
     // initialize the disruptor
     disruptor = new Disruptor<>(factory, ringBufferSize, executor);
-    disruptor.handleEventsWith(ekstepHandler);
+    disruptor.handleEventsWith(sunbirdTelemetryHandler);
 
     // start the disruptor and get the generated ring buffer instance
     disruptor.start();
