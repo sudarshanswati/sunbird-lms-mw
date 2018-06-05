@@ -83,48 +83,50 @@ public class BackgroundJobManager extends BaseActor {
       dbInfo = Util.dbInfoMap.get(JsonKey.COURSE_MANAGEMENT_DB);
     }
     String operation = request.getOperation();
-    ProjectLogger.log("Operation name is ==" + operation);
-    if (operation.equalsIgnoreCase(ActorOperations.PUBLISH_COURSE.getValue())) {
-      manageBackgroundJob(request);
-    } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_INFO_ELASTIC.getValue())) {
-      updateUserInfoToEs(request);
-    } else if (operation.equalsIgnoreCase(
-        ActorOperations.INSERT_USR_COURSES_INFO_ELASTIC.getValue())) {
-      insertUserCourseInfoToEs(request);
-    } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_COUNT.getValue())) {
-      updateUserCount(request);
-    } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_ORG_INFO_ELASTIC.getValue())) {
-      updateOrgInfoToEs(request);
-    } else if (operation.equalsIgnoreCase(ActorOperations.INSERT_ORG_INFO_ELASTIC.getValue())) {
-      insertOrgInfoToEs(request);
-    } else if (operation.equalsIgnoreCase(ActorOperations.INSERT_COURSE_BATCH_ES.getValue())) {
-      insertCourseBatchInfoToEs(request);
-    } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_COURSE_BATCH_ES.getValue())) {
-      updateCourseBatchInfoToEs(request);
-    } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_ORG_ES.getValue())) {
-      updateUserOrgInfoToEs(request);
-    } else if (operation.equalsIgnoreCase(ActorOperations.REMOVE_USER_ORG_ES.getValue())) {
-      removeUserOrgInfoToEs(request);
-    } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_ROLES_ES.getValue())) {
-      updateUserRoleToEs(request);
-    } else if (operation.equalsIgnoreCase(
-        ActorOperations.UPDATE_USR_COURSES_INFO_ELASTIC.getValue())) {
-      updateUserCourseInfoToEs(request);
-    } else if (operation.equalsIgnoreCase(ActorOperations.ADD_USER_BADGE_BKG.getValue())) {
-      addBadgeToUserprofile(request);
-    } else if (operation.equalsIgnoreCase(ActorOperations.INSERT_USER_NOTES_ES.getValue())) {
-      insertUserNotesToEs(request);
-    } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_NOTES_ES.getValue())) {
-      updateUserNotesToEs(request);
-    } else {
-      ProjectLogger.log("UNSUPPORTED OPERATION");
-      ProjectCommonException exception =
-          new ProjectCommonException(
-              ResponseCode.invalidOperationName.getErrorCode(),
-              ResponseCode.invalidOperationName.getErrorMessage(),
-              ResponseCode.CLIENT_ERROR.getResponseCode());
-      ProjectLogger.log("UnSupported operation in Background Job Manager", exception);
-    }
+    ProjectLogger.log("Background job manager - going to do nothing for now", LoggerEnum.ERROR.name());
+    ProjectLogger.log("Operation name is ==" + operation, LoggerEnum.ERROR.name());
+    
+//    if (operation.equalsIgnoreCase(ActorOperations.PUBLISH_COURSE.getValue())) {
+//      manageBackgroundJob(request);
+//    } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_INFO_ELASTIC.getValue())) {
+//      updateUserInfoToEs(request);
+//    } else if (operation.equalsIgnoreCase(
+//        ActorOperations.INSERT_USR_COURSES_INFO_ELASTIC.getValue())) {
+//      insertUserCourseInfoToEs(request);
+//    } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_COUNT.getValue())) {
+//      updateUserCount(request);
+//    } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_ORG_INFO_ELASTIC.getValue())) {
+//      updateOrgInfoToEs(request);
+//    } else if (operation.equalsIgnoreCase(ActorOperations.INSERT_ORG_INFO_ELASTIC.getValue())) {
+//      insertOrgInfoToEs(request);
+//    } else if (operation.equalsIgnoreCase(ActorOperations.INSERT_COURSE_BATCH_ES.getValue())) {
+//      insertCourseBatchInfoToEs(request);
+//    } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_COURSE_BATCH_ES.getValue())) {
+//      updateCourseBatchInfoToEs(request);
+//    } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_ORG_ES.getValue())) {
+//      updateUserOrgInfoToEs(request);
+//    } else if (operation.equalsIgnoreCase(ActorOperations.REMOVE_USER_ORG_ES.getValue())) {
+//      removeUserOrgInfoToEs(request);
+//    } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_ROLES_ES.getValue())) {
+//      updateUserRoleToEs(request);
+//    } else if (operation.equalsIgnoreCase(
+//        ActorOperations.UPDATE_USR_COURSES_INFO_ELASTIC.getValue())) {
+//      updateUserCourseInfoToEs(request);
+//    } else if (operation.equalsIgnoreCase(ActorOperations.ADD_USER_BADGE_BKG.getValue())) {
+//      addBadgeToUserprofile(request);
+//    } else if (operation.equalsIgnoreCase(ActorOperations.INSERT_USER_NOTES_ES.getValue())) {
+//      insertUserNotesToEs(request);
+//    } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_NOTES_ES.getValue())) {
+//      updateUserNotesToEs(request);
+//    } else {
+//      ProjectLogger.log("UNSUPPORTED OPERATION");
+//      ProjectCommonException exception =
+//          new ProjectCommonException(
+//              ResponseCode.invalidOperationName.getErrorCode(),
+//              ResponseCode.invalidOperationName.getErrorMessage(),
+//              ResponseCode.CLIENT_ERROR.getResponseCode());
+//      ProjectLogger.log("UnSupported operation in Background Job Manager", exception);
+//    }
   }
 
   /** @param actorMessage */

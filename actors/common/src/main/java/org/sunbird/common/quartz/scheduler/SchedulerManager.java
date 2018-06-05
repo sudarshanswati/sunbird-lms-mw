@@ -38,10 +38,12 @@ public final class SchedulerManager {
   /** This method will register the quartz scheduler job. */
   private void schedule() {
     ProjectLogger.log(
-        "Call to start scheduler jobs - org.sunbird.common.quartz.scheduler.SchedulerManager");
+        "Call to start scheduler jobs - org.sunbird.common.quartz.scheduler.SchedulerManager", LoggerEnum.ERROR.name());
 
     try {
       Thread.sleep(240000);
+      ProjectLogger.log(
+    	        "Starting SchedulerManager after sleep", LoggerEnum.ERROR.name());
       boolean isEmbedded = false;
       Properties configProp = null;
       String embeddVal = System.getenv(JsonKey.SUNBIRD_QUARTZ_MODE);
@@ -60,7 +62,7 @@ public final class SchedulerManager {
       String identifier = "NetOps-PC1502295457753";
       scheduleCourseBatchCount(identifier);
       scheduleBulkUploadJob(identifier);
-      scheduleCoursePublishJob(identifier);
+      //scheduleCoursePublishJob(identifier);
       scheduleMetricsReportJob(identifier);
       scheduleUpdateUserCountJob(identifier);
       scheduleChannelReg(identifier);

@@ -27,6 +27,7 @@ import org.sunbird.common.models.response.Response;
 import org.sunbird.common.models.util.ActorOperations;
 import org.sunbird.common.models.util.JsonKey;
 import org.sunbird.common.models.util.LocationActorOperation;
+import org.sunbird.common.models.util.LoggerEnum;
 import org.sunbird.common.models.util.ProjectLogger;
 import org.sunbird.common.models.util.ProjectUtil;
 import org.sunbird.common.models.util.ProjectUtil.BulkProcessStatus;
@@ -88,6 +89,7 @@ public class BulkUploadBackGroundJobActor extends BaseActor {
   public void onReceive(Request request) throws Throwable {
     Util.initializeContext(request, JsonKey.USER);
     ExecutionContext.setRequestId(request.getRequestId());
+    ProjectLogger.log("BulkUploadBackGroundJobActor - processing upload", LoggerEnum.ERROR.name());
     if (request.getOperation().equalsIgnoreCase(ActorOperations.PROCESS_BULK_UPLOAD.getValue())) {
       process(request);
     } else {
