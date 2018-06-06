@@ -24,6 +24,9 @@ import org.sunbird.common.models.util.LoggerEnum;
 import org.sunbird.common.models.util.ProjectLogger;
 import org.sunbird.common.models.util.ProjectUtil;
 import org.sunbird.common.models.util.PropertiesCache;
+import org.sunbird.common.models.util.datasecurity.DataMaskingService;
+import org.sunbird.common.models.util.datasecurity.DecryptionService;
+import org.sunbird.common.models.util.datasecurity.EncryptionService;
 //import org.sunbird.common.models.util.datasecurity.DataMaskingService;
 import org.sunbird.common.request.Request;
 import org.sunbird.common.responsecode.ResponseCode;
@@ -388,12 +391,12 @@ public class BackgroundJobManager extends BaseActor {
     Util.DbInfo addrDbInfo = Util.dbInfoMap.get(JsonKey.ADDRESS_DB);
     Util.DbInfo eduDbInfo = Util.dbInfoMap.get(JsonKey.EDUCATION_DB);
     Util.DbInfo jobProDbInfo = Util.dbInfoMap.get(JsonKey.JOB_PROFILE_DB);
-//    EncryptionService service =
-//        org.sunbird.common.models.util.datasecurity.impl.ServiceFactory
-//            .getEncryptionServiceInstance(null);
-//    DecryptionService decService =
-//        org.sunbird.common.models.util.datasecurity.impl.ServiceFactory
-//            .getDecryptionServiceInstance(null);
+    EncryptionService service =
+        org.sunbird.common.models.util.datasecurity.impl.ServiceFactory
+            .getEncryptionServiceInstance(null);
+    DecryptionService decService =
+        org.sunbird.common.models.util.datasecurity.impl.ServiceFactory
+            .getDecryptionServiceInstance(null);
     Response response = null;
     List<Map<String, Object>> list = null;
     try {
@@ -408,15 +411,15 @@ public class BackgroundJobManager extends BaseActor {
 
     if (!(list.isEmpty())) {
       Map<String, Object> map = list.get(0);
-      //Response addrResponse;
+      Response addrResponse;
       list = null;
       try {
         ProjectLogger.log("collecting user address operation user Id : " + userId);
-//        String encUserId = service.encryptData(userId);
-//        addrResponse =
-//            cassandraOperation.getRecordsByProperty(
-//                addrDbInfo.getKeySpace(), addrDbInfo.getTableName(), JsonKey.USER_ID, encUserId);
-//        list = (List<Map<String, Object>>) addrResponse.getResult().get(JsonKey.RESPONSE);
+        String encUserId = service.encryptData(userId);
+        addrResponse =
+            cassandraOperation.getRecordsByProperty(
+                addrDbInfo.getKeySpace(), addrDbInfo.getTableName(), JsonKey.USER_ID, encUserId);
+        list = (List<Map<String, Object>>) addrResponse.getResult().get(JsonKey.RESPONSE);
         ProjectLogger.log("collecting user address operation completed user Id : " + userId);
       } catch (Exception e) {
         ProjectLogger.log(e.getMessage(), e);
@@ -550,20 +553,20 @@ public class BackgroundJobManager extends BaseActor {
           ((List<Map<String, Object>>) response.getResult().get(JsonKey.RESPONSE)).get(0);
 
       // save masked email and phone number
-//      DataMaskingService maskingService =
-//          org.sunbird.common.models.util.datasecurity.impl.ServiceFactory.getMaskingServiceInstance(
-//              null);
-      String phone = (String) map.get(JsonKey.PHONE);
-      String email = (String) map.get(JsonKey.EMAIL);
+      DataMaskingService maskingService =
+    	         org.sunbird.common.models.util.datasecurity.impl.ServiceFactory.getMaskingServiceInstance(
+    	             null);
+    	     String phone = (String) map.get(JsonKey.PHONE);
+    	     String email = (String) map.get(JsonKey.EMAIL);
 
-      if (!StringUtils.isBlank(phone)) {
-        map.put(JsonKey.ENC_PHONE, phone);
-        map.put(JsonKey.PHONE, phone);
-      }
-      if (!StringUtils.isBlank(email)) {
-        map.put(JsonKey.ENC_EMAIL, email);
-        map.put(JsonKey.EMAIL, email);
-      }
+    	     if (!StringUtils.isBlank(phone)) {
+    	       map.put(JsonKey.ENC_PHONE, phone);
+    	       map.put(JsonKey.PHONE, maskingService.maskPhone(decService.decryptData(phone)));
+    	     }
+    	     if (!StringUtils.isBlank(email)) {
+    	       map.put(JsonKey.ENC_EMAIL, email);
+    	       map.put(JsonKey.EMAIL, maskingService.maskEmail(decService.decryptData(email)));
+    	     }
 
       // add the skills column into ES
       Response skillresponse =
