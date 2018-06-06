@@ -27,6 +27,10 @@ import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.request.BaseRequest;
 
+import akka.dispatch.ExecutionContexts;
+import akka.dispatch.Mapper;
+import scala.concurrent.Future;
+
 /**
  * This class will make the call to EkStep content search
  *
@@ -40,6 +44,35 @@ public final class EkStepRequestUtil {
   
   private static String contentSearchURL = RestUtil.getBasePath() + PropertiesCache.getInstance().getProperty(JsonKey.EKSTEP_CONTENT_SEARCH_URL); 
   
+  
+  public static Future<Map<String, Object>> searchContentAsync(String body) throws Exception {
+	  BaseRequest request = Unirest.post(contentSearchURL).body(body);
+	  Future<JsonNode> response = RestUtil.executeAsync(request);
+	  return response.map(new Mapper<JsonNode, Map<String, Object>>() {
+
+		@Override
+		public Map<String, Object> apply(JsonNode jsonNode) {
+			try {
+				JSONObject result =jsonNode.getObject().getJSONObject("result");
+				Map<String, Object> resultMap = jsonToMap(result);
+				  Object contents = resultMap.get(JsonKey.CONTENT);
+				  resultMap.remove(JsonKey.CONTENT);
+				  resultMap.put(JsonKey.CONTENTS, contents);
+				  String resmsgId = null;
+			      String apiId = null;
+			      Map<String, Object> param = new HashMap<>();
+			      param.put(JsonKey.RES_MSG_ID, resmsgId);
+			      param.put(JsonKey.API_ID, apiId);
+			      resultMap.put(JsonKey.PARAMS, param);
+				  return resultMap;
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+			return null;
+		}
+		  
+	}, ExecutionContexts.global());
+  }
   
   public static Map<String, Object> searchContent(String body) throws Exception {
 	  BaseRequest request = Unirest.post(contentSearchURL).body(body);
