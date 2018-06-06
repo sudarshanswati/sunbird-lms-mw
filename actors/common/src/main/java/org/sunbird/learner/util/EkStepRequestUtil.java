@@ -67,10 +67,9 @@ public final class EkStepRequestUtil {
 				  return resultMap;
 			} catch (JSONException e) {
 				e.printStackTrace();
+				return null;
 			}
-			return null;
 		}
-		  
 	}, ExecutionContexts.global());
   }
   
