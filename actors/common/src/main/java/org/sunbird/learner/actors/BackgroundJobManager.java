@@ -1,5 +1,6 @@
 package org.sunbird.learner.actors;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,7 +8,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,7 +27,6 @@ import org.sunbird.common.models.util.PropertiesCache;
 import org.sunbird.common.models.util.datasecurity.DataMaskingService;
 import org.sunbird.common.models.util.datasecurity.DecryptionService;
 import org.sunbird.common.models.util.datasecurity.EncryptionService;
-//import org.sunbird.common.models.util.datasecurity.DataMaskingService;
 import org.sunbird.common.request.Request;
 import org.sunbird.common.responsecode.ResponseCode;
 import org.sunbird.common.services.ProfileCompletenessService;
@@ -37,8 +36,6 @@ import org.sunbird.learner.util.CourseBatchSchedulerUtil;
 import org.sunbird.learner.util.UserUtility;
 import org.sunbird.learner.util.Util;
 import org.sunbird.learner.util.Util.DbInfo;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * This class will handle all the background job. Example when ever course is published then this
@@ -70,6 +67,17 @@ public class BackgroundJobManager extends BaseActor {
 
   private static Map<String, String> headerMap = new HashMap<>();
   private static Util.DbInfo dbInfo = null;
+  private EncryptionService service =
+	        org.sunbird.common.models.util.datasecurity.impl.ServiceFactory
+	            .getEncryptionServiceInstance(null);
+  private DecryptionService decService =
+	        org.sunbird.common.models.util.datasecurity.impl.ServiceFactory
+	            .getDecryptionServiceInstance(null);
+  private DataMaskingService maskingService =
+          org.sunbird.common.models.util.datasecurity.impl.ServiceFactory.getMaskingServiceInstance(
+              null);
+  
+  private ObjectMapper mapper = new ObjectMapper();
 
   static {
     headerMap.put("content-type", "application/json");
@@ -81,17 +89,17 @@ public class BackgroundJobManager extends BaseActor {
 
   @Override
   public void onReceive(Request request) throws Throwable {
+	  ProjectLogger.log("BackgroundJobManager received action: " + request.getOperation(), LoggerEnum.INFO.name());
     ProjectLogger.log("BackgroundJobManager  onReceive called");
     if (dbInfo == null) {
       dbInfo = Util.dbInfoMap.get(JsonKey.COURSE_MANAGEMENT_DB);
     }
     String operation = request.getOperation();
-    ProjectLogger.log("Background job manager - going to do nothing for now", LoggerEnum.ERROR.name());
-    ProjectLogger.log("Operation name is ==" + operation, LoggerEnum.ERROR.name());
-    
+    ProjectLogger.log("Operation name is ==" + operation);
     if (operation.equalsIgnoreCase(ActorOperations.PUBLISH_COURSE.getValue())) {
-      manageBackgroundJob(request);
+      //manageBackgroundJob(request);
     } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_INFO_ELASTIC.getValue())) {
+    		ProjectLogger.log("Update user info to ES called.", LoggerEnum.INFO.name());
       updateUserInfoToEs(request);
     } else if (operation.equalsIgnoreCase(
         ActorOperations.INSERT_USR_COURSES_INFO_ELASTIC.getValue())) {
@@ -326,7 +334,6 @@ public class BackgroundJobManager extends BaseActor {
         esMap = orgList.get(0);
         String contactDetails = (String) esMap.get(JsonKey.CONTACT_DETAILS);
         if (!StringUtils.isBlank(contactDetails)) {
-          ObjectMapper mapper = new ObjectMapper();
           Object[] arr;
           try {
             arr = mapper.readValue(contactDetails, Object[].class);
@@ -391,12 +398,6 @@ public class BackgroundJobManager extends BaseActor {
     Util.DbInfo addrDbInfo = Util.dbInfoMap.get(JsonKey.ADDRESS_DB);
     Util.DbInfo eduDbInfo = Util.dbInfoMap.get(JsonKey.EDUCATION_DB);
     Util.DbInfo jobProDbInfo = Util.dbInfoMap.get(JsonKey.JOB_PROFILE_DB);
-    EncryptionService service =
-        org.sunbird.common.models.util.datasecurity.impl.ServiceFactory
-            .getEncryptionServiceInstance(null);
-    DecryptionService decService =
-        org.sunbird.common.models.util.datasecurity.impl.ServiceFactory
-            .getDecryptionServiceInstance(null);
     Response response = null;
     List<Map<String, Object>> list = null;
     try {
@@ -553,20 +554,17 @@ public class BackgroundJobManager extends BaseActor {
           ((List<Map<String, Object>>) response.getResult().get(JsonKey.RESPONSE)).get(0);
 
       // save masked email and phone number
-      DataMaskingService maskingService =
-    	         org.sunbird.common.models.util.datasecurity.impl.ServiceFactory.getMaskingServiceInstance(
-    	             null);
-    	     String phone = (String) map.get(JsonKey.PHONE);
-    	     String email = (String) map.get(JsonKey.EMAIL);
+      String phone = (String) map.get(JsonKey.PHONE);
+      String email = (String) map.get(JsonKey.EMAIL);
 
-    	     if (!StringUtils.isBlank(phone)) {
-    	       map.put(JsonKey.ENC_PHONE, phone);
-    	       map.put(JsonKey.PHONE, maskingService.maskPhone(decService.decryptData(phone)));
-    	     }
-    	     if (!StringUtils.isBlank(email)) {
-    	       map.put(JsonKey.ENC_EMAIL, email);
-    	       map.put(JsonKey.EMAIL, maskingService.maskEmail(decService.decryptData(email)));
-    	     }
+      if (!StringUtils.isBlank(phone)) {
+        map.put(JsonKey.ENC_PHONE, phone);
+        map.put(JsonKey.PHONE, maskingService.maskPhone(decService.decryptData(phone)));
+      }
+      if (!StringUtils.isBlank(email)) {
+        map.put(JsonKey.ENC_EMAIL, email);
+        map.put(JsonKey.EMAIL, maskingService.maskEmail(decService.decryptData(email)));
+      }
 
       // add the skills column into ES
       Response skillresponse =
@@ -717,7 +715,6 @@ public class BackgroundJobManager extends BaseActor {
   @SuppressWarnings("unchecked")
   private Map<String, Object> getContentDetails(String content) {
     Map<String, Object> map = new HashMap<>();
-    ObjectMapper mapper = new ObjectMapper();
     try {
       JSONObject object = new JSONObject(content);
       JSONObject resultObj = object.getJSONObject(JsonKey.RESULT);
