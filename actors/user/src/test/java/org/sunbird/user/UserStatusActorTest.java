@@ -61,7 +61,7 @@ public class UserStatusActorTest extends BaseActorTest {
 
   @Test
   public void testBlockUserSuccess() {
-    boolean result = testScenario(true, ActorOperations.BLOCK_USER, true, null);
+    boolean result = testScenario(false, ActorOperations.BLOCK_USER, true, null);
     assertTrue(result);
   }
 
