@@ -178,7 +178,8 @@ public class UserManagementActor extends BaseActor {
     if (null != resp) {
       Map<String, Object> completeUserDetails = new HashMap<>(userDbRecord);
       completeUserDetails.putAll(requestMap);
-      saveUserDetailsToEs(completeUserDetails);
+      // saveUserDetailsToEs(completeUserDetails);
+      ProjectLogger.log("UserManagementActor:updateUser: not using old Es call", LoggerEnum.INFO);
     }
     targetObject =
         TelemetryUtil.generateTargetObject(
@@ -593,7 +594,24 @@ public class UserManagementActor extends BaseActor {
         ((Map<String, Object>) resp.getResult().get(JsonKey.RESPONSE)).get(JsonKey.ERRORS));
     sender().tell(response, self());
     if (null != resp) {
-      saveUserDetailsToEs(esResponse);
+      //  saveUserDetailsToEs(esResponse);
+      ProjectLogger.log(
+          "UserManagementActor : ProcessUserRequest : Not saving to Es using Old call",
+          LoggerEnum.INFO);
+      /*
+      GeneratorAndSendEventUtil.userUpdateEvent(
+          (String) esResponse.get(JsonKey.ID),
+          getActorRef(ActorOperations.GET_SYSTEM_SETTING.getValue()));
+
+      ProjectLogger.log(
+          "****************Message inserted****************************", LoggerEnum.INFO);
+
+      EventMessage msg = messageBroker.recieve(JsonKey.USER);
+      if (msg != null) {
+        ProjectLogger.log(
+            "****************Message recieved****************************", LoggerEnum.INFO);
+        ProjectLogger.log("$$$$$ : " + msg.getOperationOn(), LoggerEnum.INFO);
+      }*/
     }
     requestMap.put(JsonKey.PASSWORD, userMap.get(JsonKey.PASSWORD));
     if (StringUtils.isNotBlank(callerId)) {
