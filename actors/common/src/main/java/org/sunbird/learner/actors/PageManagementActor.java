@@ -347,12 +347,11 @@ public class PageManagementActor extends BaseActor {
 
           if (MapUtils.isNotEmpty(sectionMap)) {
 
-            Map<String, Object> sectionData = null;
-            sectionData =
+            Map<String, Object> sectionData = new HashMap<String, Object>(
                 PageCacheLoaderService.getDataFromCache(
                     ActorOperations.GET_SECTION.getValue(),
                     (String) sectionMap.get(JsonKey.ID),
-                    Map.class);
+                    Map.class));
             long endTime1 = System.currentTimeMillis();
             System.out.println("Page assemble time 1: " + (endTime1 - startTime1));
             if (MapUtils.isNotEmpty(sectionData)) {
