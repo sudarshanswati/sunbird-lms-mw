@@ -71,8 +71,8 @@ public class PageManagementActor extends BaseActor {
   private Util.DbInfo orgDbInfo = Util.dbInfoMap.get(JsonKey.ORG_DB);
   private CassandraOperation cassandraOperation = ServiceFactory.getInstance();
   private ObjectMapper mapper = new ObjectMapper();
-  private boolean isCacheEnabled =
-      Boolean.parseBoolean(ProjectUtil.propertiesCache.getProperty(JsonKey.SUNBIRD_CACHE_ENABLE));
+  private boolean isCacheEnabled = false;
+//      Boolean.parseBoolean(ProjectUtil.propertiesCache.getProperty(JsonKey.SUNBIRD_CACHE_ENABLE));
 
   @Override
   public void onReceive(Request request) throws Throwable {
@@ -317,25 +317,25 @@ public class PageManagementActor extends BaseActor {
     }
 
     String requestHashCode = "";
-    if (isCacheEnabled) {
-      Map<String, Object> reqMap = new HashMap<>();
-      reqMap.put(JsonKey.SECTION, arr);
-      reqMap.put(JsonKey.FILTERS, reqFilters);
-      reqMap.put(JsonKey.HEADER, headers);
-      reqMap.put(JsonKey.FILTER, filterMap);
-      reqMap.put(JsonKey.URL_QUERY_STRING, urlQueryString);
-      requestHashCode = HashGeneratorUtil.getHashCode(JsonUtil.toJson(reqMap));
-      Response cachedResponse =
-          PageCacheLoaderService.getDataFromCache(
-              JsonKey.PAGE_ASSEMBLE, requestHashCode, Response.class);
-      if (StringUtils.isNotBlank(requestHashCode) && cachedResponse != null) {
-        ProjectLogger.log(
-            "PageManagementActor : getPageData : response returned from cache",
-            LoggerEnum.INFO.name());
-        sender().tell(cachedResponse, self());
-        return;
-      }
-    }
+//    if (isCacheEnabled) {
+//      Map<String, Object> reqMap = new HashMap<>();
+//      reqMap.put(JsonKey.SECTION, arr);
+//      reqMap.put(JsonKey.FILTERS, reqFilters);
+//      reqMap.put(JsonKey.HEADER, headers);
+//      reqMap.put(JsonKey.FILTER, filterMap);
+//      reqMap.put(JsonKey.URL_QUERY_STRING, urlQueryString);
+//      requestHashCode = HashGeneratorUtil.getHashCode(JsonUtil.toJson(reqMap));
+//      Response cachedResponse =
+//          PageCacheLoaderService.getDataFromCache(
+//              JsonKey.PAGE_ASSEMBLE, requestHashCode, Response.class);
+//      if (StringUtils.isNotBlank(requestHashCode) && cachedResponse != null) {
+//        ProjectLogger.log(
+//            "PageManagementActor : getPageData : response returned from cache",
+//            LoggerEnum.INFO.name());
+//        sender().tell(cachedResponse, self());
+//        return;
+//      }
+//    }
     String reqHashCode = requestHashCode;
     try {
       List<Future<Map<String, Object>>> sectionList = new ArrayList<>();
@@ -386,10 +386,10 @@ public class PageManagementActor extends BaseActor {
                       "PageManagementActor:getPageData:apply: Response before caching it = "
                           + response,
                       LoggerEnum.INFO);
-                  if (StringUtils.isNotBlank(reqHashCode)) {
-                    PageCacheLoaderService.putDataIntoCache(
-                        JsonKey.PAGE_ASSEMBLE, reqHashCode, response);
-                  }
+//                  if (StringUtils.isNotBlank(reqHashCode)) {
+//                    PageCacheLoaderService.putDataIntoCache(
+//                        JsonKey.PAGE_ASSEMBLE, reqHashCode, response);
+//                  }
                   return response;
                 }
               },
