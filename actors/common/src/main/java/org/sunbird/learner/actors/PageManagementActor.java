@@ -275,6 +275,8 @@ public class PageManagementActor extends BaseActor {
     filterMap.remove(JsonKey.CREATED_BY);
     Map<String, Object> reqFilters = (Map<String, Object>) req.get(JsonKey.FILTERS);
 
+    final long startTime = System.currentTimeMillis();
+
     /** if orgId is not then consider default page */
     if (StringUtils.isBlank(orgId)) {
       orgId = "NA";
@@ -390,6 +392,8 @@ public class PageManagementActor extends BaseActor {
 //                    PageCacheLoaderService.putDataIntoCache(
 //                        JsonKey.PAGE_ASSEMBLE, reqHashCode, response);
 //                  }
+                  long endTime = System.currentTimeMillis();
+                  System.out.println("Page assemble time: " + (endTime - startTime)/1000);
                   return response;
                 }
               },
