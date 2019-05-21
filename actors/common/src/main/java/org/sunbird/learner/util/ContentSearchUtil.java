@@ -36,7 +36,8 @@ public class ContentSearchUtil {
     String searchPath = System.getenv(JsonKey.SUNBIRD_CS_SEARCH_PATH);
     if (StringUtils.isBlank(searchPath))
       searchPath = PropertiesCache.getInstance().getProperty(JsonKey.SUNBIRD_CS_SEARCH_PATH);
-    contentSearchURL = baseUrl + searchPath;
+    contentSearchURL = "http://28.0.3.10:9000/v3/search";
+//            baseUrl + searchPath;
   }
 
   private static Map<String, String> getUpdatedHeaders(Map<String, String> headers) {
