@@ -275,7 +275,7 @@ public class PageManagementActor extends BaseActor {
     filterMap.remove(JsonKey.CREATED_BY);
     Map<String, Object> reqFilters = (Map<String, Object>) req.get(JsonKey.FILTERS);
 
-    final long startTime = System.currentTimeMillis();
+    final long startTime1 = System.currentTimeMillis();
 
     /** if orgId is not then consider default page */
     if (StringUtils.isBlank(orgId)) {
@@ -353,6 +353,8 @@ public class PageManagementActor extends BaseActor {
                     ActorOperations.GET_SECTION.getValue(),
                     (String) sectionMap.get(JsonKey.ID),
                     Map.class);
+            long endTime1 = System.currentTimeMillis();
+            System.out.println("Page assemble time 1: " + (endTime1 - startTime1));
             if (MapUtils.isNotEmpty(sectionData)) {
               Future<Map<String, Object>> contentFuture =
                   getContentData(
@@ -393,7 +395,7 @@ public class PageManagementActor extends BaseActor {
 //                        JsonKey.PAGE_ASSEMBLE, reqHashCode, response);
 //                  }
                   long endTime = System.currentTimeMillis();
-                  System.out.println("Page assemble time: " + (endTime - startTime)/1000);
+                  System.out.println("Page assemble time 3: " + (endTime - startTime1));
                   return response;
                 }
               },

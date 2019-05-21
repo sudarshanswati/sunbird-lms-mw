@@ -60,6 +60,7 @@ public class ContentSearchUtil {
 String urlQueryString, String queryRequestBody, Map<String, String> headers, ExecutionContextExecutor ec) {
     String logMsgPrefix = "ContentSearchUtil:searchContent: ";
 
+    final long start = System.currentTimeMillis();
     Unirest.clearDefaultHeaders();
     String urlString =
         StringUtils.isNotBlank(urlQueryString)
@@ -74,6 +75,8 @@ String urlQueryString, String queryRequestBody, Map<String, String> headers, Exe
           @Override
           public Map<String, Object> apply(HttpResponse<JsonNode> response) {
             try {
+              long end = System.currentTimeMillis();
+              System.out.println("Page assemble time 2: " + (end - start));
               if (RestUtil.isSuccessful(response)) {
                 JSONObject result = response.getBody().getObject().getJSONObject("result");
                 Map<String, Object> resultMap = jsonToMap(result);
