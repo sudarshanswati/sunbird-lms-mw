@@ -23,10 +23,8 @@ public class DataCacheHandler implements Runnable {
    * pageMap is the map of (orgId:pageName) and page Object (i.e map of string , object) sectionMap
    * is the map of section Id and section Object (i.e map of string , object)
    */
-  private static Map<String, Map<String, Object>> pageMap = new ConcurrentHashMap<>();
-
-  private static Map<String, Map<String, Object>> sectionMap = new ConcurrentHashMap<>();
   private static Map<String, Object> roleMap = new ConcurrentHashMap<>();
+
   private static Map<String, String> orgTypeMap = new ConcurrentHashMap<>();
   private static Map<String, String> configSettings = new ConcurrentHashMap<>();
   private static Map<String, Map<String, List<Map<String, String>>>> frameworkCategoriesMap =
@@ -39,8 +37,6 @@ public class DataCacheHandler implements Runnable {
   @Override
   public void run() {
     ProjectLogger.log("DataCacheHandler:run: Cache refresh started.", LoggerEnum.INFO.name());
-    cache(pageMap, "page_management");
-    cache(sectionMap, "page_section");
     roleCache(roleMap);
     orgTypeCache(orgTypeMap);
     cacheSystemConfig(configSettings);
@@ -131,26 +127,6 @@ public class DataCacheHandler implements Runnable {
       ProjectLogger.log(
           "DataCacheHandler:cache: Exception in retrieving page section " + e.getMessage(), e);
     }
-  }
-
-  /** @return the pageMap */
-  public static Map<String, Map<String, Object>> getPageMap() {
-    return pageMap;
-  }
-
-  /** @param pageMap the pageMap to set */
-  public static void setPageMap(Map<String, Map<String, Object>> pageMap) {
-    DataCacheHandler.pageMap = pageMap;
-  }
-
-  /** @return the sectionMap */
-  public static Map<String, Map<String, Object>> getSectionMap() {
-    return sectionMap;
-  }
-
-  /** @param sectionMap the sectionMap to set */
-  public static void setSectionMap(Map<String, Map<String, Object>> sectionMap) {
-    DataCacheHandler.sectionMap = sectionMap;
   }
 
   /** @return the roleMap */

@@ -31,7 +31,6 @@ import org.sunbird.common.models.util.JsonKey;
 import org.sunbird.common.models.util.datasecurity.DecryptionService;
 import org.sunbird.common.request.Request;
 import org.sunbird.helper.ServiceFactory;
-import org.sunbird.learner.util.ContentSearchUtil;
 import org.sunbird.learner.util.DataCacheHandler;
 import org.sunbird.learner.util.Util;
 
@@ -47,8 +46,7 @@ import org.sunbird.learner.util.Util;
   Util.class,
   //  UserOrgDaoImpl.class,
   DecryptionService.class,
-  DataCacheHandler.class,
-  ContentSearchUtil.class
+  DataCacheHandler.class
 })
 @PowerMockIgnore({"javax.management.*"})
 public class TenantPreferenceManagementActorTest {

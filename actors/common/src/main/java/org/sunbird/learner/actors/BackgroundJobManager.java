@@ -23,7 +23,6 @@ import org.sunbird.common.models.util.PropertiesCache;
 import org.sunbird.common.request.Request;
 import org.sunbird.common.responsecode.ResponseCode;
 import org.sunbird.helper.ServiceFactory;
-import org.sunbird.learner.util.CourseBatchSchedulerUtil;
 import org.sunbird.learner.util.Util;
 import org.sunbird.learner.util.Util.DbInfo;
 
@@ -40,28 +39,26 @@ import org.sunbird.learner.util.Util.DbInfo;
     "updateUserInfoToElastic",
     "updateUserRoles",
     "addUserBadgebackground",
-    "updateUserCoursesInfoToElastic",
-    "updateUserCoursesInfoToElastic",
     "insertOrgInfoToElastic",
     "updateOrgInfoToElastic",
     "updateUserOrgES",
-    "removeUserOrgES",
-    "insertUserNotesToElastic",
-    "updateUserNotesToElastic",
-    "insertUserCoursesInfoToElastic",
-    "updateCourseBatchToEs",
-    "insertCourseBatchToEs"
+    "removeUserOrgES"
   }
 )
 public class BackgroundJobManager extends BaseActor {
 
   private static Map<String, String> headerMap = new HashMap<>();
+  private static Map<String, String> headerMapAuth = new HashMap<>();
   private static Util.DbInfo dbInfo = null;
   private ObjectMapper mapper = new ObjectMapper();
 
   static {
     headerMap.put("content-type", "application/json");
     headerMap.put("accept", "application/json");
+    String header = ProjectUtil.getConfigValue(JsonKey.EKSTEP_AUTHORIZATION);
+    header = JsonKey.BEARER + header;
+    headerMapAuth.put(JsonKey.AUTHORIZATION, header);
+    headerMapAuth.put("Content-Type", "application/json");
   }
 
   private CassandraOperation cassandraOperation = ServiceFactory.getInstance();
@@ -71,44 +68,25 @@ public class BackgroundJobManager extends BaseActor {
     ProjectLogger.log(
         "BackgroundJobManager received action: " + request.getOperation(), LoggerEnum.INFO.name());
     ProjectLogger.log("BackgroundJobManager  onReceive called");
-    if (dbInfo == null) {
-      dbInfo = Util.dbInfoMap.get(JsonKey.COURSE_MANAGEMENT_DB);
-    }
     String operation = request.getOperation();
     ProjectLogger.log("Operation name is ==" + operation);
-    if (operation.equalsIgnoreCase(ActorOperations.PUBLISH_COURSE.getValue())) {
-      // manageBackgroundJob(request);
-    } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_INFO_ELASTIC.getValue())) {
+    if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_INFO_ELASTIC.getValue())) {
       ProjectLogger.log("Update user info to ES called.", LoggerEnum.INFO.name());
       updateUserInfoToEs(request);
-    } else if (operation.equalsIgnoreCase(
-        ActorOperations.INSERT_USR_COURSES_INFO_ELASTIC.getValue())) {
-      insertUserCourseInfoToEs(request);
     } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_COUNT.getValue())) {
       updateUserCount(request);
     } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_ORG_INFO_ELASTIC.getValue())) {
       updateOrgInfoToEs(request);
     } else if (operation.equalsIgnoreCase(ActorOperations.INSERT_ORG_INFO_ELASTIC.getValue())) {
       insertOrgInfoToEs(request);
-    } else if (operation.equalsIgnoreCase(ActorOperations.INSERT_COURSE_BATCH_ES.getValue())) {
-      insertCourseBatchInfoToEs(request);
-    } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_COURSE_BATCH_ES.getValue())) {
-      updateCourseBatchInfoToEs(request);
     } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_ORG_ES.getValue())) {
       updateUserOrgInfoToEs(request);
     } else if (operation.equalsIgnoreCase(ActorOperations.REMOVE_USER_ORG_ES.getValue())) {
       removeUserOrgInfoToEs(request);
     } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_ROLES_ES.getValue())) {
       updateUserRoleToEs(request);
-    } else if (operation.equalsIgnoreCase(
-        ActorOperations.UPDATE_USR_COURSES_INFO_ELASTIC.getValue())) {
-      updateUserCourseInfoToEs(request);
     } else if (operation.equalsIgnoreCase(ActorOperations.ADD_USER_BADGE_BKG.getValue())) {
       addBadgeToUserprofile(request);
-    } else if (operation.equalsIgnoreCase(ActorOperations.INSERT_USER_NOTES_ES.getValue())) {
-      insertUserNotesToEs(request);
-    } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_NOTES_ES.getValue())) {
-      updateUserNotesToEs(request);
     } else {
       ProjectLogger.log("UNSUPPORTED OPERATION");
       ProjectCommonException exception =
@@ -194,30 +172,6 @@ public class BackgroundJobManager extends BaseActor {
   }
 
   @SuppressWarnings("unchecked")
-  private void updateUserCourseInfoToEs(Request actorMessage) {
-
-    Map<String, Object> batch =
-        (Map<String, Object>) actorMessage.getRequest().get(JsonKey.USER_COURSES);
-    updateDataToElastic(
-        ProjectUtil.EsIndex.sunbird.getIndexName(),
-        ProjectUtil.EsType.usercourses.getTypeName(),
-        (String) batch.get(JsonKey.ID),
-        batch);
-  }
-
-  @SuppressWarnings("unchecked")
-  private void insertUserCourseInfoToEs(Request actorMessage) {
-
-    Map<String, Object> batch =
-        (Map<String, Object>) actorMessage.getRequest().get(JsonKey.USER_COURSES);
-    insertDataToElastic(
-        ProjectUtil.EsIndex.sunbird.getIndexName(),
-        ProjectUtil.EsType.usercourses.getTypeName(),
-        (String) batch.get(JsonKey.ID),
-        batch);
-  }
-
-  @SuppressWarnings("unchecked")
   private void removeUserOrgInfoToEs(Request actorMessage) {
     Map<String, Object> orgMap = (Map<String, Object>) actorMessage.getRequest().get(JsonKey.USER);
     Map<String, Object> result =
@@ -273,31 +227,6 @@ public class BackgroundJobManager extends BaseActor {
   }
 
   @SuppressWarnings("unchecked")
-  private void updateCourseBatchInfoToEs(Request actorMessage) {
-    Map<String, Object> batch = (Map<String, Object>) actorMessage.getRequest().get(JsonKey.BATCH);
-    updateDataToElastic(
-        ProjectUtil.EsIndex.sunbird.getIndexName(),
-        ProjectUtil.EsType.course.getTypeName(),
-        (String) batch.get(JsonKey.ID),
-        batch);
-  }
-
-  @SuppressWarnings("unchecked")
-  private void insertCourseBatchInfoToEs(Request actorMessage) {
-    Map<String, Object> batch = (Map<String, Object>) actorMessage.getRequest().get(JsonKey.BATCH);
-    // making call to register tag
-    registertag(
-        (String) batch.getOrDefault(JsonKey.HASH_TAG_ID, batch.get(JsonKey.ID)),
-        "{}",
-        CourseBatchSchedulerUtil.headerMap);
-    // register tag for course
-    registertag(
-        (String) batch.getOrDefault(JsonKey.COURSE_ID, batch.get(JsonKey.COURSE_ID)),
-        "{}",
-        CourseBatchSchedulerUtil.headerMap);
-  }
-
-  @SuppressWarnings("unchecked")
   private void insertOrgInfoToEs(Request actorMessage) {
     ProjectLogger.log("Calling method to save inside Es==");
     Map<String, Object> orgMap =
@@ -328,7 +257,7 @@ public class BackgroundJobManager extends BaseActor {
         hashOrgId = id;
       }
       // making call to register tag
-      registertag(hashOrgId, "{}", CourseBatchSchedulerUtil.headerMap);
+      registertag(hashOrgId, "{}", headerMapAuth);
       insertDataToElastic(
           ProjectUtil.EsIndex.sunbird.getIndexName(),
           ProjectUtil.EsType.organisation.getTypeName(),
@@ -594,31 +523,5 @@ public class BackgroundJobManager extends BaseActor {
           e);
     }
     return tagStatus;
-  }
-
-  @SuppressWarnings("unchecked")
-  private void insertUserNotesToEs(Request actorMessage) {
-    ProjectLogger.log("Calling method to save inside Es==");
-    Map<String, Object> noteMap = (Map<String, Object>) actorMessage.getRequest().get(JsonKey.NOTE);
-    if (ProjectUtil.isNotNull(noteMap) && noteMap.size() > 0) {
-      String id = (String) noteMap.get(JsonKey.ID);
-      insertDataToElastic(
-          ProjectUtil.EsIndex.sunbird.getIndexName(),
-          ProjectUtil.EsType.usernotes.getTypeName(),
-          id,
-          noteMap);
-    } else {
-      ProjectLogger.log("No data found to save inside Es for Notes--", LoggerEnum.INFO.name());
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  private void updateUserNotesToEs(Request actorMessage) {
-    Map<String, Object> noteMap = (Map<String, Object>) actorMessage.getRequest().get(JsonKey.NOTE);
-    updateDataToElastic(
-        ProjectUtil.EsIndex.sunbird.getIndexName(),
-        ProjectUtil.EsType.usernotes.getTypeName(),
-        (String) noteMap.get(JsonKey.ID),
-        noteMap);
   }
 }

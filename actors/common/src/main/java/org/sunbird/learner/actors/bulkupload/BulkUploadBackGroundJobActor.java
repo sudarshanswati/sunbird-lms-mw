@@ -6,10 +6,8 @@ import static org.sunbird.learner.util.Util.isNull;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,11 +22,18 @@ import org.sunbird.cassandra.CassandraOperation;
 import org.sunbird.common.ElasticSearchUtil;
 import org.sunbird.common.exception.ProjectCommonException;
 import org.sunbird.common.models.response.Response;
-import org.sunbird.common.models.util.*;
+import org.sunbird.common.models.util.ActorOperations;
+import org.sunbird.common.models.util.JsonKey;
+import org.sunbird.common.models.util.LocationActorOperation;
+import org.sunbird.common.models.util.LoggerEnum;
+import org.sunbird.common.models.util.ProjectLogger;
+import org.sunbird.common.models.util.ProjectUtil;
 import org.sunbird.common.models.util.ProjectUtil.BulkProcessStatus;
 import org.sunbird.common.models.util.ProjectUtil.EsIndex;
 import org.sunbird.common.models.util.ProjectUtil.EsType;
-import org.sunbird.common.models.util.ProjectUtil.Status;
+import org.sunbird.common.models.util.PropertiesCache;
+import org.sunbird.common.models.util.Slug;
+import org.sunbird.common.models.util.TelemetryEnvKey;
 import org.sunbird.common.models.util.datasecurity.DecryptionService;
 import org.sunbird.common.models.util.datasecurity.EncryptionService;
 import org.sunbird.common.models.util.datasecurity.OneWayHashing;
@@ -118,248 +123,8 @@ public class BulkUploadBackGroundJobActor extends BaseActor {
           .equalsIgnoreCase(JsonKey.ORGANISATION)) {
         CopyOnWriteArrayList<Map<String, Object>> orgList = new CopyOnWriteArrayList<>(jsonList);
         processOrgInfo(orgList, dataMap);
-      } else if (((String) dataMap.get(JsonKey.OBJECT_TYPE)).equalsIgnoreCase(JsonKey.BATCH)) {
-        processBatchEnrollment(jsonList, processId);
       }
     }
-  }
-
-  @SuppressWarnings("unchecked")
-  private void processBatchEnrollment(List<Map<String, Object>> jsonList, String processId) {
-    // update status from NEW to INProgress
-    updateStatusForProcessing(processId);
-    Util.DbInfo dbInfo = Util.dbInfoMap.get(JsonKey.COURSE_BATCH_DB);
-    List<Map<String, Object>> successResultList = new ArrayList<>();
-    List<Map<String, Object>> failureResultList = new ArrayList<>();
-
-    Map<String, Object> successListMap = null;
-    Map<String, Object> failureListMap = null;
-    for (Map<String, Object> batchMap : jsonList) {
-      successListMap = new HashMap<>();
-      failureListMap = new HashMap<>();
-      Map<String, Object> tempFailList = new HashMap<>();
-      Map<String, Object> tempSuccessList = new HashMap<>();
-
-      String batchId = (String) batchMap.get(JsonKey.BATCH_ID);
-      Response courseBatchResult =
-          cassandraOperation.getRecordById(dbInfo.getKeySpace(), dbInfo.getTableName(), batchId);
-      String msg = validateBatchInfo(courseBatchResult);
-      if (msg.equals(JsonKey.SUCCESS)) {
-        List<Map<String, Object>> courseList =
-            (List<Map<String, Object>>) courseBatchResult.get(JsonKey.RESPONSE);
-        List<String> userList =
-            new ArrayList<>(Arrays.asList((((String) batchMap.get(JsonKey.USER_IDs)).split(","))));
-        validateBatchUserListAndAdd(
-            courseList.get(0), batchId, userList, tempFailList, tempSuccessList);
-        failureListMap.put(batchId, tempFailList.get(JsonKey.FAILURE_RESULT));
-        successListMap.put(batchId, tempSuccessList.get(JsonKey.SUCCESS_RESULT));
-      } else {
-        batchMap.put(JsonKey.ERROR_MSG, msg);
-        failureResultList.add(batchMap);
-      }
-      if (!successListMap.isEmpty()) {
-        successResultList.add(successListMap);
-      }
-      if (!failureListMap.isEmpty()) {
-        failureResultList.add(failureListMap);
-      }
-    }
-
-    // Insert record to BulkDb table
-    Map<String, Object> map = new HashMap<>();
-    map.put(JsonKey.ID, processId);
-    map.put(JsonKey.SUCCESS_RESULT, ProjectUtil.convertMapToJsonString(successResultList));
-    map.put(JsonKey.FAILURE_RESULT, ProjectUtil.convertMapToJsonString(failureResultList));
-    map.put(JsonKey.PROCESS_END_TIME, ProjectUtil.getFormattedDate());
-    map.put(JsonKey.STATUS, ProjectUtil.BulkProcessStatus.COMPLETED.getValue());
-    try {
-      cassandraOperation.updateRecord(bulkDb.getKeySpace(), bulkDb.getTableName(), map);
-    } catch (Exception e) {
-      ProjectLogger.log(
-          "Exception Occurred while updating bulk_upload_process in BulkUploadBackGroundJobActor : ",
-          e);
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  private void validateBatchUserListAndAdd(
-      Map<String, Object> courseBatchObject,
-      String batchId,
-      List<String> userIds,
-      Map<String, Object> failList,
-      Map<String, Object> successList) {
-    Util.DbInfo dbInfo = Util.dbInfoMap.get(JsonKey.COURSE_BATCH_DB);
-    Util.DbInfo userOrgdbInfo = Util.dbInfoMap.get(JsonKey.USR_ORG_DB);
-    List<Map<String, Object>> failedUserList = new ArrayList<>();
-    List<Map<String, Object>> passedUserList = new ArrayList<>();
-
-    Map<String, Object> map = null;
-    List<String> createdFor = (List<String>) courseBatchObject.get(JsonKey.COURSE_CREATED_FOR);
-    Map<String, Boolean> participants =
-        (Map<String, Boolean>) courseBatchObject.get(JsonKey.PARTICIPANT);
-    if (participants == null) {
-      participants = new HashMap<>();
-    }
-    // check whether can update user or not
-    for (String userId : userIds) {
-      if (!(participants.containsKey(userId))) {
-        Response dbResponse =
-            cassandraOperation.getRecordsByProperty(
-                userOrgdbInfo.getKeySpace(), userOrgdbInfo.getTableName(), JsonKey.USER_ID, userId);
-        List<Map<String, Object>> userOrgResult =
-            (List<Map<String, Object>>) dbResponse.get(JsonKey.RESPONSE);
-
-        if (userOrgResult.isEmpty()) {
-          map = new HashMap<>();
-          map.put(userId, ResponseCode.userNotAssociatedToOrg.getErrorMessage());
-          failedUserList.add(map);
-          continue;
-        }
-        boolean flag = false;
-        for (int i = 0; i < userOrgResult.size() && !flag; i++) {
-          Map<String, Object> usrOrgDetail = userOrgResult.get(i);
-          if (createdFor.contains(usrOrgDetail.get(JsonKey.ORGANISATION_ID))) {
-            participants.put(
-                userId,
-                addUserCourses(
-                    batchId,
-                    (String) courseBatchObject.get(JsonKey.COURSE_ID),
-                    userId,
-                    (Map<String, String>) (courseBatchObject.get(JsonKey.COURSE_ADDITIONAL_INFO))));
-            flag = true;
-          }
-        }
-        if (flag) {
-          map = new HashMap<>();
-          map.put(userId, JsonKey.SUCCESS);
-          passedUserList.add(map);
-        } else {
-          map = new HashMap<>();
-          map.put(userId, ResponseCode.userNotAssociatedToOrg.getErrorMessage());
-          failedUserList.add(map);
-        }
-
-      } else {
-        map = new HashMap<>();
-        map.put(userId, JsonKey.SUCCESS);
-        passedUserList.add(map);
-      }
-    }
-    courseBatchObject.put(JsonKey.PARTICIPANT, participants);
-    cassandraOperation.updateRecord(dbInfo.getKeySpace(), dbInfo.getTableName(), courseBatchObject);
-    successList.put(JsonKey.SUCCESS_RESULT, passedUserList);
-    failList.put(JsonKey.FAILURE_RESULT, failedUserList);
-    // process Audit Log
-    ProjectLogger.log("method call going to satrt for ES--.....");
-    Request request = new Request();
-    request.setOperation(ActorOperations.UPDATE_COURSE_BATCH_ES.getValue());
-    request.getRequest().put(JsonKey.BATCH, courseBatchObject);
-    ProjectLogger.log("making a call to save Course Batch data to ES");
-    try {
-      tellToAnother(request);
-    } catch (Exception ex) {
-      ProjectLogger.log(
-          "Exception Occurred during saving Course Batch to Es while updating Course Batch : ", ex);
-    }
-  }
-
-  private Boolean addUserCourses(
-      String batchId, String courseId, String userId, Map<String, String> additionalCourseInfo) {
-
-    Util.DbInfo courseEnrollmentdbInfo = Util.dbInfoMap.get(JsonKey.LEARNER_COURSE_DB);
-    Util.DbInfo coursePublishdbInfo = Util.dbInfoMap.get(JsonKey.COURSE_PUBLISHED_STATUS);
-    Response response =
-        cassandraOperation.getRecordById(
-            coursePublishdbInfo.getKeySpace(), coursePublishdbInfo.getTableName(), courseId);
-    List<Map<String, Object>> resultList =
-        (List<Map<String, Object>>) response.get(JsonKey.RESPONSE);
-    if (!ProjectUtil.CourseMgmtStatus.LIVE
-        .getValue()
-        .equalsIgnoreCase(additionalCourseInfo.get(JsonKey.STATUS))) {
-      if (resultList.isEmpty()) {
-        return false;
-      }
-      Map<String, Object> publishStatus = resultList.get(0);
-
-      if (Status.ACTIVE.getValue() != (Integer) publishStatus.get(JsonKey.STATUS)) {
-        return false;
-      }
-    }
-    Boolean flag = false;
-    Timestamp ts = new Timestamp(new Date().getTime());
-    Map<String, Object> userCourses = new HashMap<>();
-    userCourses.put(JsonKey.USER_ID, userId);
-    userCourses.put(JsonKey.BATCH_ID, batchId);
-    userCourses.put(JsonKey.COURSE_ID, courseId);
-    userCourses.put(JsonKey.ID, generatePrimaryKey(userCourses));
-    userCourses.put(JsonKey.CONTENT_ID, courseId);
-    userCourses.put(JsonKey.COURSE_ENROLL_DATE, ProjectUtil.getFormattedDate());
-    userCourses.put(JsonKey.ACTIVE, ProjectUtil.ActiveStatus.ACTIVE.getValue());
-    userCourses.put(JsonKey.STATUS, ProjectUtil.ProgressStatus.NOT_STARTED.getValue());
-    userCourses.put(JsonKey.DATE_TIME, ts);
-    userCourses.put(JsonKey.COURSE_PROGRESS, 0);
-    userCourses.put(JsonKey.COURSE_LOGO_URL, additionalCourseInfo.get(JsonKey.COURSE_LOGO_URL));
-    userCourses.put(JsonKey.COURSE_NAME, additionalCourseInfo.get(JsonKey.COURSE_NAME));
-    userCourses.put(JsonKey.DESCRIPTION, additionalCourseInfo.get(JsonKey.DESCRIPTION));
-    if (!StringUtils.isBlank(additionalCourseInfo.get(JsonKey.LEAF_NODE_COUNT))) {
-      userCourses.put(
-          JsonKey.LEAF_NODE_COUNT,
-          Integer.parseInt("" + additionalCourseInfo.get(JsonKey.LEAF_NODE_COUNT)));
-    }
-    userCourses.put(JsonKey.TOC_URL, additionalCourseInfo.get(JsonKey.TOC_URL));
-    try {
-      cassandraOperation.insertRecord(
-          courseEnrollmentdbInfo.getKeySpace(), courseEnrollmentdbInfo.getTableName(), userCourses);
-      // TODO: for some reason, ES indexing is failing with TimestelemetryProcessingCalltamp value.
-      // need to
-      // check and
-      // correct it.
-      userCourses.put(JsonKey.DATE_TIME, ProjectUtil.formatDate(ts));
-      insertUserCoursesToES(userCourses);
-      flag = true;
-      Map<String, Object> targetObject =
-          TelemetryUtil.generateTargetObject(userId, JsonKey.USER, JsonKey.UPDATE, null);
-      List<Map<String, Object>> correlatedObject = new ArrayList<>();
-      TelemetryUtil.generateCorrelatedObject(batchId, JsonKey.BATCH, null, correlatedObject);
-      TelemetryUtil.telemetryProcessingCall(userCourses, targetObject, correlatedObject);
-    } catch (Exception ex) {
-      ProjectLogger.log("INSERT RECORD TO USER COURSES EXCEPTION ", ex);
-      flag = false;
-    }
-    return flag;
-  }
-
-  private void insertUserCoursesToES(Map<String, Object> courseMap) {
-    Request request = new Request();
-    request.setOperation(ActorOperations.INSERT_USR_COURSES_INFO_ELASTIC.getValue());
-    request.getRequest().put(JsonKey.USER_COURSES, courseMap);
-    try {
-      tellToAnother(request);
-    } catch (Exception ex) {
-      ProjectLogger.log("Exception Occurred during saving user count to Es : ", ex);
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  private String validateBatchInfo(Response courseBatchResult) {
-    // check batch exist in db or not
-    List<Map<String, Object>> courseList =
-        (List<Map<String, Object>>) courseBatchResult.get(JsonKey.RESPONSE);
-    if ((courseList.isEmpty())) {
-      return ResponseCode.invalidCourseBatchId.getErrorMessage();
-    }
-    Map<String, Object> courseBatchObject = courseList.get(0);
-    // check whether coursebbatch type is invite only or not ...
-    if (ProjectUtil.isNull(courseBatchObject.get(JsonKey.ENROLLMENT_TYPE))
-        || !((String) courseBatchObject.get(JsonKey.ENROLLMENT_TYPE))
-            .equalsIgnoreCase(JsonKey.INVITE_ONLY)) {
-      return ResponseCode.enrollmentTypeValidation.getErrorMessage();
-    }
-    if (ProjectUtil.isNull(courseBatchObject.get(JsonKey.COURSE_CREATED_FOR))
-        || ((List) courseBatchObject.get(JsonKey.COURSE_CREATED_FOR)).isEmpty()) {
-      return ResponseCode.courseCreatedForIsNull.getErrorMessage();
-    }
-    return JsonKey.SUCCESS;
   }
 
   private void processOrgInfo(

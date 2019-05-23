@@ -29,7 +29,6 @@ import org.sunbird.common.models.util.TelemetryEnvKey;
 import org.sunbird.common.request.ExecutionContext;
 import org.sunbird.common.request.Request;
 import org.sunbird.dto.SearchDTO;
-import org.sunbird.learner.actors.coursebatch.service.UserCoursesService;
 import org.sunbird.learner.util.UserUtility;
 import org.sunbird.learner.util.Util;
 import org.sunbird.models.organisation.Organisation;
@@ -108,17 +107,6 @@ public class SearchHandlerActor extends BaseActor {
           }
           updateUserDetailsWithOrgName(requestedFields, userMapList);
         }
-        if (EsType.course.getTypeName().equalsIgnoreCase(filterObjectType)) {
-          if (JsonKey.PARTICIPANTS.equalsIgnoreCase(
-              (String) request.getContext().get(JsonKey.PARTICIPANTS))) {
-            List<Map<String, Object>> courseBatchList =
-                (List<Map<String, Object>>) result.get(JsonKey.CONTENT);
-            for (Map<String, Object> courseBatch : courseBatchList) {
-              courseBatch.put(
-                  JsonKey.PARTICIPANTS, getParticipantList((String) courseBatch.get(JsonKey.ID)));
-            }
-          }
-        }
         Response response = new Response();
         if (result != null) {
           response.put(JsonKey.RESPONSE, result);
@@ -181,11 +169,6 @@ public class SearchHandlerActor extends BaseActor {
           e,
           LoggerEnum.ERROR.name());
     }
-  }
-
-  private List<String> getParticipantList(String id) {
-    UserCoursesService userCourseService = new UserCoursesService();
-    return userCourseService.getEnrolledUserFromBatch(id);
   }
 
   @SuppressWarnings("unchecked")

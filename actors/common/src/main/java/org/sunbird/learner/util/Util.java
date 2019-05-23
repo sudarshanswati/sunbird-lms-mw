@@ -78,7 +78,6 @@ import org.sunbird.notification.utils.SMSFactory;
 public final class Util {
 
   public static final Map<String, DbInfo> dbInfoMap = new HashMap<>();
-  public static final int RECOMENDED_LIST_SIZE = 10;
   private static PropertiesCache propertiesCache = PropertiesCache.getInstance();
   public static final int DEFAULT_ELASTIC_DATA_LIMIT = 10000;
   public static final String KEY_SPACE_NAME = "sunbird";
@@ -155,16 +154,9 @@ public final class Util {
     // this map will be used during cassandra data base interaction.
     // this map will have each DB name and it's corresponding keyspace and table
     // name.
-    dbInfoMap.put(JsonKey.LEARNER_COURSE_DB, getDbInfoObject(KEY_SPACE_NAME, "user_courses"));
-    dbInfoMap.put(
-        JsonKey.LEARNER_CONTENT_DB, getDbInfoObject(KEY_SPACE_NAME, "content_consumption"));
-    dbInfoMap.put(
-        JsonKey.COURSE_MANAGEMENT_DB, getDbInfoObject(KEY_SPACE_NAME, "course_management"));
     dbInfoMap.put(JsonKey.USER_DB, getDbInfoObject(KEY_SPACE_NAME, "user"));
     dbInfoMap.put(JsonKey.USER_AUTH_DB, getDbInfoObject(KEY_SPACE_NAME, "user_auth"));
     dbInfoMap.put(JsonKey.ORG_DB, getDbInfoObject(KEY_SPACE_NAME, "organisation"));
-    dbInfoMap.put(JsonKey.PAGE_MGMT_DB, getDbInfoObject(KEY_SPACE_NAME, "page_management"));
-    dbInfoMap.put(JsonKey.PAGE_SECTION_DB, getDbInfoObject(KEY_SPACE_NAME, "page_section"));
     dbInfoMap.put(JsonKey.SECTION_MGMT_DB, getDbInfoObject(KEY_SPACE_NAME, "page_section"));
     dbInfoMap.put(JsonKey.ASSESSMENT_EVAL_DB, getDbInfoObject(KEY_SPACE_NAME, "assessment_eval"));
     dbInfoMap.put(JsonKey.ASSESSMENT_ITEM_DB, getDbInfoObject(KEY_SPACE_NAME, "assessment_item"));
@@ -184,9 +176,6 @@ public final class Util {
     dbInfoMap.put(JsonKey.ROLE_GROUP, getDbInfoObject(KEY_SPACE_NAME, "role_group"));
     dbInfoMap.put(JsonKey.USER_ORG_DB, getDbInfoObject(KEY_SPACE_NAME, "user_org"));
     dbInfoMap.put(JsonKey.BULK_OP_DB, getDbInfoObject(KEY_SPACE_NAME, "bulk_upload_process"));
-    dbInfoMap.put(JsonKey.COURSE_BATCH_DB, getDbInfoObject(KEY_SPACE_NAME, "course_batch"));
-    dbInfoMap.put(
-        JsonKey.COURSE_PUBLISHED_STATUS, getDbInfoObject(KEY_SPACE_NAME, "course_publish_status"));
     dbInfoMap.put(JsonKey.REPORT_TRACKING_DB, getDbInfoObject(KEY_SPACE_NAME, "report_tracking"));
     dbInfoMap.put(JsonKey.BADGES_DB, getDbInfoObject(KEY_SPACE_NAME, "badge"));
     dbInfoMap.put(JsonKey.USER_BADGES_DB, getDbInfoObject(KEY_SPACE_NAME, "user_badge"));
@@ -873,8 +862,6 @@ public final class Util {
     } else {
       requestContext = new HashMap<>();
       // request level info ...
-      Map<String, Object> req = actorMessage.getRequest();
-      String requestedBy = (String) req.get(JsonKey.REQUESTED_BY);
       String actorId = getKeyFromContext(JsonKey.ACTOR_ID, actorMessage);
       String actorType = getKeyFromContext(JsonKey.ACTOR_TYPE, actorMessage);
       String appId = getKeyFromContext(JsonKey.APP_ID, actorMessage);
