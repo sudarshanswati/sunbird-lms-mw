@@ -56,7 +56,6 @@ import org.sunbird.learner.util.Util.DbInfo;
 public class BackgroundJobManager extends BaseActor {
 
   private static Map<String, String> headerMap = new HashMap<>();
-  private static Util.DbInfo dbInfo = null;
   private ObjectMapper mapper = new ObjectMapper();
 
   static {
@@ -71,21 +70,14 @@ public class BackgroundJobManager extends BaseActor {
     ProjectLogger.log(
         "BackgroundJobManager received action: " + request.getOperation(), LoggerEnum.INFO.name());
     ProjectLogger.log("BackgroundJobManager  onReceive called");
-    if (dbInfo == null) {
-      dbInfo = Util.dbInfoMap.get(JsonKey.COURSE_MANAGEMENT_DB);
-    }
     String operation = request.getOperation();
     ProjectLogger.log("Operation name is ==" + operation);
-    if (operation.equalsIgnoreCase(ActorOperations.PUBLISH_COURSE.getValue())) {
-      // manageBackgroundJob(request);
-    } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_INFO_ELASTIC.getValue())) {
+     if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_INFO_ELASTIC.getValue())) {
       ProjectLogger.log("Update user info to ES called.", LoggerEnum.INFO.name());
       updateUserInfoToEs(request);
     } else if (operation.equalsIgnoreCase(
         ActorOperations.INSERT_USR_COURSES_INFO_ELASTIC.getValue())) {
       insertUserCourseInfoToEs(request);
-    } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_USER_COUNT.getValue())) {
-      updateUserCount(request);
     } else if (operation.equalsIgnoreCase(ActorOperations.UPDATE_ORG_INFO_ELASTIC.getValue())) {
       updateOrgInfoToEs(request);
     } else if (operation.equalsIgnoreCase(ActorOperations.INSERT_ORG_INFO_ELASTIC.getValue())) {
@@ -375,8 +367,8 @@ public class BackgroundJobManager extends BaseActor {
   }
 
   /** Method to update the user count . */
-  @SuppressWarnings("unchecked")
-  private void updateUserCount(Request actorMessage) {
+  
+  /* private void updateUserCount(Request actorMessage) {
     String courseId = (String) actorMessage.get(JsonKey.COURSE_ID);
     Map<String, Object> updateRequestMap = actorMessage.getRequest();
 
@@ -403,14 +395,13 @@ public class BackgroundJobManager extends BaseActor {
     } else {
       ProjectLogger.log("USER COUNT NOT UPDATED SUCCESSFULLY IN COURSE MGMT TABLE");
     }
-  }
+  } */
 
   /**
    * @param request
    * @return boolean
    */
-  @SuppressWarnings("unchecked")
-  private boolean manageBackgroundJob(Request request) {
+ /*  private boolean manageBackgroundJob(Request request) {
     Map<String, Object> data = null;
     if (request.getRequest() == null) {
       return false;
@@ -445,7 +436,7 @@ public class BackgroundJobManager extends BaseActor {
       }
     }
     return true;
-  }
+  } */
 
   /**
    * Method to get the course data.
@@ -509,7 +500,7 @@ public class BackgroundJobManager extends BaseActor {
    * @param data Map<String, Object>
    * @return boolean
    */
-  private boolean updateCourseManagement(Map<String, Object> data) {
+ /* private boolean updateCourseManagement(Map<String, Object> data) {
     Map<String, Object> updateRequestMap = new HashMap<>();
     updateRequestMap.put(
         JsonKey.NO_OF_LECTURES, data.get(JsonKey.COUNT) != null ? data.get(JsonKey.COUNT) : 0);
@@ -525,7 +516,7 @@ public class BackgroundJobManager extends BaseActor {
     ProjectLogger.log(resposne.toString());
 
     return (!(resposne.get(JsonKey.RESPONSE) instanceof ProjectCommonException));
-  }
+  } */
 
   /**
    * Method to cache the course data .
