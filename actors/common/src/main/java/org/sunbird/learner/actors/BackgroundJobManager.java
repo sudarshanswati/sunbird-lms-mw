@@ -366,77 +366,7 @@ public class BackgroundJobManager extends BaseActor {
         userDetails);
   }
 
-  /** Method to update the user count . */
   
-  /* private void updateUserCount(Request actorMessage) {
-    String courseId = (String) actorMessage.get(JsonKey.COURSE_ID);
-    Map<String, Object> updateRequestMap = actorMessage.getRequest();
-
-    Response result =
-        cassandraOperation.getPropertiesValueById(
-            dbInfo.getKeySpace(), dbInfo.getTableName(), courseId, JsonKey.USER_COUNT);
-    Map<String, Object> responseMap = null;
-    if (null != (result.get(JsonKey.RESPONSE))
-        && (!((List<Map<String, Object>>) result.get(JsonKey.RESPONSE)).isEmpty())) {
-      responseMap = ((List<Map<String, Object>>) result.get(JsonKey.RESPONSE)).get(0);
-    }
-    int userCount =
-        (int)
-            (responseMap.get(JsonKey.USER_COUNT) != null ? responseMap.get(JsonKey.USER_COUNT) : 0);
-    updateRequestMap.put(JsonKey.USER_COUNT, userCount + 1);
-    updateRequestMap.put(JsonKey.ID, courseId);
-    updateRequestMap.remove(JsonKey.OPERATION);
-    updateRequestMap.remove(JsonKey.COURSE_ID);
-    Response resposne =
-        cassandraOperation.updateRecord(
-            dbInfo.getKeySpace(), dbInfo.getTableName(), updateRequestMap);
-    if (resposne.get(JsonKey.RESPONSE).equals(JsonKey.SUCCESS)) {
-      ProjectLogger.log("USER COUNT UPDATED SUCCESSFULLY IN COURSE MGMT TABLE");
-    } else {
-      ProjectLogger.log("USER COUNT NOT UPDATED SUCCESSFULLY IN COURSE MGMT TABLE");
-    }
-  } */
-
-  /**
-   * @param request
-   * @return boolean
-   */
- /*  private boolean manageBackgroundJob(Request request) {
-    Map<String, Object> data = null;
-    if (request.getRequest() == null) {
-      return false;
-    } else {
-      data = request.getRequest();
-    }
-
-    List<Map<String, Object>> list = (List<Map<String, Object>>) data.get(JsonKey.RESPONSE);
-    Map<String, Object> content = list.get(0);
-    String contentId = (String) content.get(JsonKey.CONTENT_ID);
-    if (!StringUtils.isBlank(contentId)) {
-      String contentData = getCourseData(contentId);
-      if (!StringUtils.isBlank(contentData)) {
-        Map<String, Object> map = getContentDetails(contentData);
-        map.put(JsonKey.ID, content.get(JsonKey.COURSE_ID));
-        updateCourseManagement(map);
-        List<String> createdForValue = null;
-        Object obj = content.get(JsonKey.COURSE_CREATED_FOR);
-        if (obj != null) {
-          createdForValue = (List<String>) obj;
-        }
-        content.remove(JsonKey.COURSE_CREATED_FOR);
-        content.put(JsonKey.APPLICABLE_FOR, createdForValue);
-        Map<String, Object> finalResponseMap = (Map<String, Object>) map.get(JsonKey.RESULT);
-        finalResponseMap.putAll(content);
-        finalResponseMap.put(JsonKey.OBJECT_TYPE, ProjectUtil.EsType.course.getTypeName());
-        insertDataToElastic(
-            ProjectUtil.EsIndex.sunbird.getIndexName(),
-            ProjectUtil.EsType.course.getTypeName(),
-            (String) map.get(JsonKey.ID),
-            finalResponseMap);
-      }
-    }
-    return true;
-  } */
 
   /**
    * Method to get the course data.
@@ -494,31 +424,7 @@ public class BackgroundJobManager extends BaseActor {
     return map;
   }
 
-  /**
-   * Method to update the course management data on basis of course id.
-   *
-   * @param data Map<String, Object>
-   * @return boolean
-   */
- /* private boolean updateCourseManagement(Map<String, Object> data) {
-    Map<String, Object> updateRequestMap = new HashMap<>();
-    updateRequestMap.put(
-        JsonKey.NO_OF_LECTURES, data.get(JsonKey.COUNT) != null ? data.get(JsonKey.COUNT) : 0);
-    updateRequestMap.put(
-        JsonKey.COURSE_LOGO_URL,
-        data.get(JsonKey.APPICON) != null ? data.get(JsonKey.APPICON) : "");
-    updateRequestMap.put(
-        JsonKey.TOC_URL, data.get(JsonKey.TOC_URL) != null ? data.get(JsonKey.TOC_URL) : "");
-    updateRequestMap.put(JsonKey.ID, data.get(JsonKey.ID));
-    Response resposne =
-        cassandraOperation.updateRecord(
-            dbInfo.getKeySpace(), dbInfo.getTableName(), updateRequestMap);
-    ProjectLogger.log(resposne.toString());
-
-    return (!(resposne.get(JsonKey.RESPONSE) instanceof ProjectCommonException));
-  } */
-
-  /**
+    /**
    * Method to cache the course data .
    *
    * @param index String
