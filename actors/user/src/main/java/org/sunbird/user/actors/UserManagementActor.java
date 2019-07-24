@@ -389,6 +389,8 @@ public class UserManagementActor extends BaseActor {
     actorMessage.toLower();
     Map<String, Object> userMap = actorMessage.getRequest();
     String callerId = (String) actorMessage.getContext().get(JsonKey.CALLER_ID);
+    callerId = "onBehalf";
+    ProjectLogger.log("*******CallerID in Create User******"+callerId, "INFO");
     String version = (String) actorMessage.getContext().get(JsonKey.VERSION);
     if (StringUtils.isNotBlank(version) && JsonKey.VERSION_2.equalsIgnoreCase(version)) {
       userRequestValidator.validateCreateUserV2Request(actorMessage);
@@ -543,9 +545,11 @@ public class UserManagementActor extends BaseActor {
 
   @SuppressWarnings("unchecked")
   private void processUserRequest(Map<String, Object> userMap, String callerId) {
+    ProjectLogger.log("*****Caller Id in Process user req*********"+callerId,"INFO");
     Map<String, Object> requestMap = null;
     UserUtil.setUserDefaultValue(userMap, callerId);
     User user = mapper.convertValue(userMap, User.class);
+    ProjectLogger.log("*****User Email**********"+user.getEmail(),"INFO");
     UserUtil.validateExternalIds(user, JsonKey.CREATE);
     userMap.put(JsonKey.EXTERNAL_IDS, user.getExternalIds());
     UserUtil.validateUserPhoneEmailAndWebPages(user, JsonKey.CREATE);
@@ -597,6 +601,7 @@ public class UserManagementActor extends BaseActor {
     }
     requestMap.put(JsonKey.PASSWORD, userMap.get(JsonKey.PASSWORD));
     if (StringUtils.isNotBlank(callerId)) {
+      ProjectLogger.log("*****Inside Send Email***********","INFO");
       sendEmailAndSms(requestMap);
     }
     Map<String, Object> targetObject = null;
