@@ -598,9 +598,9 @@ public class UserManagementActor extends BaseActor {
     }
     String password = userMap.get(JsonKey.PASSWORD).toString();
     requestMap.put(JsonKey.PASSWORD, password);
-    //send email if there is no caller id or there is no password provided in the request
+    //send email if there is caller id or there is no password provided in the request
     //ABLE product feature only
-    if (StringUtils.isNotBlank(callerId) || StringUtils.isNotBlank(password)) {
+    if (StringUtils.isNotBlank(callerId) || StringUtils.isBlank(password)) {
     	ProjectLogger.log("*****Inside Send Email***********","INFO");
       sendEmailAndSms(requestMap);
     }
