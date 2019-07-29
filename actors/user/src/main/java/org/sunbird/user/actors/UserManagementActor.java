@@ -389,9 +389,7 @@ public class UserManagementActor extends BaseActor {
     actorMessage.toLower();
     Map<String, Object> userMap = actorMessage.getRequest();
     String callerId = (String) actorMessage.getContext().get(JsonKey.CALLER_ID);
-    callerId = "onBehalf";
-    ProjectLogger.log("*******CallerID in Create User******"+callerId, "INFO");
-    String version = (String) actorMessage.getContext().get(JsonKey.VERSION);
+     String version = (String) actorMessage.getContext().get(JsonKey.VERSION);
     if (StringUtils.isNotBlank(version) && JsonKey.VERSION_2.equalsIgnoreCase(version)) {
       userRequestValidator.validateCreateUserV2Request(actorMessage);
       if (StringUtils.isNotBlank(callerId)) {
@@ -545,7 +543,6 @@ public class UserManagementActor extends BaseActor {
 
   @SuppressWarnings("unchecked")
   private void processUserRequest(Map<String, Object> userMap, String callerId) {
-    ProjectLogger.log("*****Caller Id in Process user req*********"+callerId,"INFO");
     Map<String, Object> requestMap = null;
     UserUtil.setUserDefaultValue(userMap, callerId);
     User user = mapper.convertValue(userMap, User.class);
@@ -599,9 +596,12 @@ public class UserManagementActor extends BaseActor {
     if (null != resp) {
       saveUserDetailsToEs(esResponse);
     }
-    requestMap.put(JsonKey.PASSWORD, userMap.get(JsonKey.PASSWORD));
-    if (StringUtils.isNotBlank(callerId)) {
-      ProjectLogger.log("*****Inside Send Email***********","INFO");
+    String password = userMap.get(JsonKey.PASSWORD).toString();
+    requestMap.put(JsonKey.PASSWORD, password);
+    //send email if there is no caller id or there is no password provided in the request
+    //ABLE product feature only
+    if (StringUtils.isNotBlank(callerId) || StringUtils.isNotBlank(password)) {
+    	ProjectLogger.log("*****Inside Send Email***********","INFO");
       sendEmailAndSms(requestMap);
     }
     Map<String, Object> targetObject = null;

@@ -149,6 +149,17 @@ public class UserManagementActorTest {
             null);
     assertTrue(result);
   }
+  
+  @Test
+  public void testCreateUserSuccessWithoutUserPassword() {
+
+    boolean result =
+        testScenario(
+            getRequest(
+                false, true, true, getAdditionalMapData(reqMap), ActorOperations.CREATE_USER),
+            null);
+    assertTrue(result);
+  }
 
   @Test
   public void testCreateUserSuccessWithoutUserCallerIdChannelAndRootOrgId() {
@@ -329,7 +340,7 @@ public class UserManagementActorTest {
             null);
     assertTrue(result);
   }
-/**
+
   @Test
   public void testCreateUserFailureWithUserTypeAsTeacherAndCustodianOrg() {
     reqMap.put(JsonKey.USER_TYPE, JsonKey.TEACHER);
@@ -340,7 +351,7 @@ public class UserManagementActorTest {
             ResponseCode.errorTeacherCannotBelongToCustodianOrg);
     assertTrue(result);
   }
-*/
+
   @Test
   public void testUpdateUserSuccessWithUserTypeTeacher() {
     Map<String, Object> req = getExternalIdMap();
