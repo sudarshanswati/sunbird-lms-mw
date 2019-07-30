@@ -596,7 +596,7 @@ public class UserManagementActor extends BaseActor {
     if (null != resp) {
       saveUserDetailsToEs(esResponse);
     }
-    String password = userMap.get(JsonKey.PASSWORD).toString();
+    String password = (String) userMap.get(JsonKey.PASSWORD);
     requestMap.put(JsonKey.PASSWORD, password);
     //send email if there is caller id or there is no password provided in the request
     //ABLE product feature only

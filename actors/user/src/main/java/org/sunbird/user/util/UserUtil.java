@@ -412,6 +412,8 @@ public class UserUtil {
 
   public static void setUserDefaultValue(Map<String, Object> userMap, String callerId) {
     if (StringUtils.isBlank(callerId)) {
+      ProjectLogger.log("*****Inside setUserDefaultValue***********","INFO");
+      ProjectLogger.log("*****No caller Id . Role assigned is public***********","INFO");
       List<String> roles = new ArrayList<>();
       roles.add(ProjectUtil.UserRole.PUBLIC.getValue());
       userMap.put(JsonKey.ROLES, roles);
