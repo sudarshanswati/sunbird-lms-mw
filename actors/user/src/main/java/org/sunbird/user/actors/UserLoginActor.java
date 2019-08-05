@@ -28,20 +28,30 @@ public class UserLoginActor extends UserBaseActor {
     }
   }
 
-  /**
-   * Updates user's current login time in Keycloak.
-   *
-   * @param actorMessage Request containing user ID.
-   */
-  private void updateUserLoginTime(Request actorMessage) {
-    String userId = (String) actorMessage.getRequest().get(JsonKey.USER_ID);
-    Response response = new Response();
-    response.put(JsonKey.RESPONSE, JsonKey.SUCCESS);
-    sender().tell(response, self());
-    if (Boolean.parseBoolean(PropertiesCache.getInstance().getProperty(JsonKey.IS_SSO_ENABLED))) {
-      boolean loginTimeResponse = getSSOManager().addUserLoginTime(userId);
-      ProjectLogger.log(
-          "UserLoginActor:updateUserLoginTime: keycloak response = " + loginTimeResponse);
-    }
-  }
+	/**
+	 * Updates user's current login time in Keycloak.
+	 *
+	 * @param actorMessage Request containing user ID.
+	 */
+	private  void updateUserLoginTime(Request actorMessage) {
+		String userId = (String) actorMessage.getRequest().get(JsonKey.USER_ID);
+		Response response = new Response();
+		response.put(JsonKey.RESPONSE, JsonKey.SUCCESS);
+		sender().tell(response, self());
+		if (Boolean.parseBoolean(PropertiesCache.getInstance().getProperty(JsonKey.IS_SSO_ENABLED))) {
+
+			String userLoginTime = Long.toString(System.currentTimeMillis());
+
+			// Update the login time in Key Cloak
+			boolean loginTimeResponse = getSSOManager().addUserLoginTime(userId, userLoginTime);
+
+			ProjectLogger.log("UserLoginActor:updateUserLoginTime: keycloak response = " + loginTimeResponse);
+
+			// Update the login time in Elastic Search
+			boolean loginTimeResponseFromES = getUserService().addUserLoginTime(userId, userLoginTime);
+
+			ProjectLogger.log("UserLoginActor:updateUserLoginTime: ES response = " + loginTimeResponseFromES);
+		}
+	}
+
 }
