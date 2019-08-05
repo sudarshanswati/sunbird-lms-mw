@@ -417,4 +417,37 @@ public class UserServiceImpl implements UserService {
     }
     return true;
   }
+  
+  /**
+	 * @author Tapojit Bhattacharya
+	 */
+	@Override
+	public boolean addUserLoginTime(String userId, String userLoginTime) {
+		boolean response = true;
+		Map<String, Object> esPublicUserProfile = esGetPublicUserProfileById(userId);
+		Map<String, Object> esMap = new HashMap<>();
+
+		List<String> list = new ArrayList<>();
+		@SuppressWarnings("unchecked")
+		List<String> currentLogTime = (List<String>) esPublicUserProfile.get(JsonKey.CURRENT_LOGIN_TIME);
+		if (currentLogTime == null || currentLogTime.isEmpty()) {
+			currentLogTime = new ArrayList<>();
+			currentLogTime.add(userLoginTime);
+		} else {
+			list.add(currentLogTime.get(0));
+			currentLogTime.clear();
+			currentLogTime.add(0, userLoginTime);
+		}
+		esMap.put(JsonKey.CURRENT_LOGIN_TIME, currentLogTime);
+		esMap.put(JsonKey.LAST_LOGIN_TIME, list);
+
+		if (MapUtils.isNotEmpty(esPublicUserProfile)) {
+			esPublicUserProfile.putAll(esMap);
+			ElasticSearchUtil.createData(ProjectUtil.EsIndex.sunbird.getIndexName(),
+					ProjectUtil.EsType.user.getTypeName(), userId, esPublicUserProfile);
+		}
+
+		return response;
+	}
+
 }
