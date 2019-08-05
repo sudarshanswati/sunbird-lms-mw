@@ -38,4 +38,14 @@ public interface UserService {
   List<String> getEncryptedList(List<String> dataList);
 
   boolean checkUsernameUniqueness(String username, boolean isEncrypted);
+  
+  /**
+	 * This method will add user current login time to Elastic Search.
+	 * @param userId
+	 * @param userLoginTime
+	 * @return
+	 * @author Tapojit Bhattacharya 
+	 */
+  boolean addUserLoginTime(String userId, String userLoginTime);
+  
 }
