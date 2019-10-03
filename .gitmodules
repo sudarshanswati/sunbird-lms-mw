@@ -1,4 +1,4 @@
 [submodule "actors/sunbird-utils"]
 	path = actors/sunbird-utils
 	url = https://github.com/sudarshanswati/sunbird-utils.git
-	branch = release-2.3.0
+	branch = rel-2.3.0
